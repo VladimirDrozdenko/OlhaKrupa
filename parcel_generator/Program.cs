@@ -9,6 +9,9 @@ namespace parcel_generator
     class Program
     {
         const char ColumnDelimiter = '\t';
+        const int state_township_number = 5;
+        const int state_assigned_district_number = 7;
+        const int property_address = 9;
 
         static void Main(string[] args)
         {
@@ -45,9 +48,12 @@ namespace parcel_generator
                 List<string> columns = new List<string>(line.Split(new char[] { ColumnDelimiter }));
 
                 string hashValue = GenerateHashFromRow(columns);
-                columns.Add(hashValue);
 
-                writer.WriteLine(ColumnsToLine(columns));
+                if (!string.IsNullOrEmpty(hashValue)) // skip columns with bad data
+                {
+                    columns.Add(hashValue);
+                    writer.WriteLine(ColumnsToLine(columns));
+                }
             }
         }
 
@@ -78,16 +84,22 @@ namespace parcel_generator
 
         private static string GenerateHashFromRow(List<string> columns)
         {
-            const int state_township_number = 5;
-            const int state_assigned_district_number = 7;
-            const int property_address = 9;
+            if (IsRowDataBad(columns))
+                return string.Empty;
 
             string concatinatedValue = string.Format("{0}_{1}_{2}", 
                 columns[state_township_number],
                 columns[state_assigned_district_number],
-                columns[property_address]);
+                columns[property_address].ToUpper());
 
             return CalculateMD5Hash(concatinatedValue);
+        }
+
+        private static bool IsRowDataBad(List<string> columns)
+        {
+            return string.IsNullOrEmpty(columns[state_township_number]) ||
+                   string.IsNullOrEmpty(columns[state_assigned_district_number]) ||
+                   string.IsNullOrEmpty(columns[property_address]);
         }
 
         private static void SkipHeader(StreamReader reader, StreamWriter writer)
