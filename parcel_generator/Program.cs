@@ -13,6 +13,8 @@ namespace parcel_generator
         const int state_assigned_district_number = 7;
         const int property_address = 9;
 
+        static Dictionary<string, uint> parcelKeys = new Dictionary<string, uint>();
+
         static void Main(string[] args)
         {
             if (args.Length == 0)
@@ -41,6 +43,8 @@ namespace parcel_generator
 
         private static void ProcessFile(StreamReader reader, StreamWriter writer)
         {
+            uint count = 0;
+
             while (!reader.EndOfStream)
             {
                 string line = reader.ReadLine();
@@ -51,7 +55,12 @@ namespace parcel_generator
 
                 if (!string.IsNullOrEmpty(hashValue)) // skip columns with bad data
                 {
-                    columns.Add(hashValue);
+                    if (!parcelKeys.ContainsKey(hashValue))
+                    {
+                        parcelKeys.Add(hashValue, ++count);
+                    }
+
+                    columns.Add(parcelKeys[hashValue].ToString("D10"));
                     writer.WriteLine(ColumnsToLine(columns));
                 }
             }
